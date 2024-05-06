@@ -1,7 +1,7 @@
 M:x
 age=+$$zCalcAge^%Zefnlii(+$h,$$getn^elibEAnLIB(""EPT"",patID,1,""100;1""))
 hr=+$$getLastFloVal^JULIB7(inpID,"""",instant,8)
-cr=+$$evalRule^elibHULIB22(755911,patID,patDAT)
+cr=+$$evalRule^elibHULIB22(82209,patID,patDAT)
 sbp=+$$getLastFloVal^JULIB7(inpID,"""",instant,5)
 st={99032510}
 trop={99032511}
