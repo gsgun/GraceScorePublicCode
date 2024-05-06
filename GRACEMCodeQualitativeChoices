@@ -1,0 +1,9 @@
+Row 99032509 Cardiac Arrest 
+Row 99032510 ST Segment EKG
+Row 99032511 Abnormal Cardiac Enzymes
+Row Type Data
+Value Type Custom List 1 Yes No 
+
+Row Row 99032512 Killip 
+Row Type Data
+Value Type Custom List 1-4 (No CHF,Rales and/or JVD,Pulmonary Edema,Cardiogenic Shock)
