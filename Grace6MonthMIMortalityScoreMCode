@@ -1,0 +1,13 @@
+M:x
+age=+$$zCalcAge^%Zefnlii(+$h,$$getn^elibEAnLIB(""EPT"",patID,1,""100;1""))
+hr=+$$getLastFloVal^JULIB7(inpID,"""",instant,8)
+cr=+$$evalRule^elibHULIB22(755911,patID,patDAT)
+sbp=+$$getLastFloVal^JULIB7(inpID,"""",instant,5)
+trop={99032511}
+kp={99032512}
+ca={99032509}
+sbp2=$s(sbp<80:54,sbp<200:54-((sbp-80)*(0.45)),sbp>200:0)
+age2=$s(age<35:0,age<45:(age-35)*1.8,age<55:((age-45)*1.8)+18,age<65:((age-55)*1.8)+36,age<75:((age-65)*1.9)+54,age<85:((age-75)*1.8)+73,age<90:((age-85)*1.8)+91,age>=90:100)
+cr2=$s(cr<3:cr*10,cr<4:((cr-3)*11)+30,cr>4:41)
+kp2=$s(kp=1:0,kp=2:27,kp=3:55,kp=4:82)
+x=age2+sbp2+cr2+kp2+(st*39)+(trop*41)+(ca*66)
