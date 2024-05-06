@@ -1,0 +1,9 @@
+M:{99032512},x=$$evalRule^elibHULIB22(82005,patID,patDAT) \\AGE
+M:{99032512},x=$$getLastFloVal^JULIB7(inpID,"""",instant,5)  \\SBP
+M:{99032512},x=$$getLastFloVal^JULIB7(inpID,"""",instant,8)  \\HR
+M:{99032512},x=$$evalRule^elibHULIB22(755911,patID,patDAT) \\Serum Creat CER Registry Inclusion Rule which calls to HTN Registry, If no HTN registry then do the following
+
+CER Rule to return Cr is formatted with property last lab value (numeric) 82134 Base Name Creatinine Common name Creatinine 
+Result type is property column value 
+Context Registry Metrics 
+Return type numeric
