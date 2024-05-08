@@ -7,23 +7,25 @@
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
       background-color: #f7f7f7;
       color: #333;
       margin: 0;
+      padding: 20px;
       line-height: 1.6;
     }
     h1 {
       font-size: 2em; /* Responsive font size */
       text-align: center;
       color: #4A90E2; /* Soothing blue for headings */
+      font-weight: bold;
     }
     .container {
       display: flex;
       flex-direction: column;
       gap: 20px;
-      max-width: 100%;
+      max-width: 1000px; /* Constrain maximum width */
       margin: auto;
+      padding: 20px; /* Added padding */
     }
     .card {
       background-color: #f0f8ff; /* Light blue panel */
@@ -35,6 +37,7 @@
     .table {
       width: 100%;
       border-collapse: collapse;
+      font-weight: bold;
     }
     .table th,
     .table td {
@@ -42,39 +45,80 @@
       text-align: left;
       border-bottom: 1px solid #ddd;
     }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
+      gap: 10px; /* Gap between elements */
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1; /* Ensure full width */
+    }
     input[type="range"] {
-      height: 20px; /* Increased slider height */
+      height: 20px; /* Slider height */
       background: #ddd;
       border-radius: 10px;
       outline: none;
+      width: 100%; /* Ensure full width */
     }
-    input[type="range"]::-webkit-slider-thumb,
+    input[type="range"]::-webkit-slider-thumb {
+      width: 20px; /* Slider thumb size */
+      height: 20px;
+      background: #4CAF50;
+      border-radius: 50%;
+      cursor: pointer;
+    }
     input[type="range"]::-moz-range-thumb {
-      width: 30px; /* Larger thumb size */
-      height: 30px;
+      width: 20px;
+      height: 20px;
       background: #4CAF50;
       border-radius: 50%;
       cursor: pointer;
     }
     input[type="number"] {
-      width: 100%; /* Ensure full width for text inputs */
-      padding: 5px; /* Added padding for readability */
+      width: 60px; /* Consistent size for number inputs */
+      padding: 5px; /* Added padding */
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      text-align: center; /* Center text */
     }
     .killip-buttons {
       display: flex;
-      flex-direction: column;
+      justify-content: center; /* Align center */
       gap: 10px;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
     }
     .killip-button {
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 5px;
+justify-content: center; /* Center horizontally */
+      align-items: center; /* Center vertically */
       cursor: pointer;
       background: white;
       transition: background-color 0.3s;
+      text-align: center; /* Center-align text */
     }
     .killip-button.selected {
       background-color: #E9F7EF;
+    }
+    .toggle-button {
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+justify-content: center; /* Center horizontally */
+      align-items: center; /* Center vertically */
+      transition: background-color 0.3s;
+      background: white;
+      border: 1px solid #ddd;
+      text-align: center; /* Center-align text */
+    }
+    .toggle-button.selected {
+      background-color: #e9f7ef;
     }
     .results {
       background-color: #f3e5ab;
@@ -82,6 +126,7 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       border: 1px solid #ddd;
+      font-weight: bold;
     }
     .results p {
       margin: 10px 0;
@@ -96,25 +141,18 @@
       border: 1px solid #ddd;
     }
     .evidence p {
-      font-size: 1em; 
+      font-size: 1em;
       color: #333;
     }
-    footer {
+     footer {
       text-align: center; /* Centered footer */
       font-size: 0.9em; /* Smaller font size for the footer */
     }
-    
-    .toggle-button {
-      padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      background: white;
-      border: 1px solid #ddd;
-    }
-
-    .toggle-button.selected {
-      background-color: #e9f7ef;
+    .separator {
+      height: 2px; /* Thickness of the line */
+      background-color: #ddd; /* Line color */
+      width: 100%;
+      margin: 20px 0; /* Spacing around the line */
     }
 
     @media (max-width: 768px) {
@@ -127,6 +165,9 @@
       .table th, 
       .table td {
         padding: 8px; /* Smaller padding for smaller screens */
+      }
+      .row {
+        flex-direction: column; /* Ensure proper layout on smaller screens */
       }
     }
   </style>
@@ -491,65 +532,62 @@ function toggleButton(buttonId) {
   <h1>GRACE ACS 2.0 Risk Calculator</h1>
   <div class="container">
     <div class="card">
-      <table class="table">
-        <tr>
-          <th>Parameter</th>
-          <th>Slider</th>
-          <th>Value</th>
-        </tr>
-        <tr>
-          <td>Age (in years)</td>
-          <td><input type="range" id="age" min="1" max="120" value="30" /></td>
-          <td><input type="number" id="ageText" min="1" max="120" value="30" step="1" /></td>
-        </tr>
-        <tr>
-          <td>Systolic Blood Pressure (mmHg)</td>
-          <td><input type="range" id="sbp" min="50" max="250" value="120" /></td>
-          <td><input type="number" id="sbpText" min="50" max="250" value="120" step="1" /></td>
-        </tr>
-        <tr>
-          <td>Heart Rate (bpm)</td>
-          <td><input type="range" id="hr" min="30" max="200" value="70" /></td>
-          <td><input type="number" id="hrText" min="30" max="200" value="70" /></td>
-        </tr>
-        <tr>
-          <td>Creatinine (mg/dL)</td>
-          <td><input type="range" id="creatinine" min="0.1" max="5" step="0.1" value="1.0" /></td>
-          <td><input type="number" id="creatinineText" min="0.1" max="5" value="1.0" step="0.1" /></td>
-        </tr>
-      </table>
+      <div class="table">
+        <div class="row">
+          <div>Age (in years)</div>
+          <div class="slider-container">
+            <input type="range" id="age" min="1" max="120" value="30" />
+            <input type="number" id="ageText" min="1" max="120" value="30" step="1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>Systolic Blood Pressure (mmHg)</div>
+          <div class="slider-container">
+            <input type="range" id="sbp" min="50" max="250" value="120" />
+            <input type="number" id="sbpText" min="50" max="250" value="120" step="1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>Heart Rate (bpm)</div>
+          <div class="slider-container">
+            <input type="range" id="hr" min="30" max="200" value="120" />
+            <input type="number" id="hrText" min="30" max="200" value="120" />
+          </div>
+        </div>
+        <div class="row">
+          <div>Creatinine (mg/dL)</div>
+          <div class="slider-container">
+            <input type="range" id="creatinine" min="0.1" max="5" step="0.1" value="1.0" />
+            <input type="number" id="creatinineText" min="0.1" max="5" value="1.0" step="0.1" />
+          </div>
+        </div>
+      </div>
     </div>
+
+  
     <div class="card">
-      <table class="table">
-        <tr>
-          <th>Killip Class</th>
-          <td>
-            <div class="killip-buttons">
-              <button class="killip-button selected" data-value="1">
-                <span class="killip">I</span> - No signs of heart failure.
-              </button>
-              <button class="killip-button" data-value="2">
-                <span class="killip">II</span> - Mild heart failure (rales, S3 gallop, jugular venous distension).
-              </button>
-              <button class="killip-button" data-value="3">
-                <span class="killip">III</span> - Pulmonary edema.
-              </button>
-              <button class="killip-button" data-value="4">
-                <span class="killip">IV</span> - Cardiogenic shock.
-              </button>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <th>Present on Admission</th>
-          <td>
+      <div class="table">
+        <div class="row">
+          <div>Killip Class</div>
+          <div class="killip-buttons">
+            <button class="killip-button selected" data-value="1">Class I - No signs of heart failure.</button>
+            <button class="killip-button" data-value="2">Class II - Mild heart failure.</button>
+            <button class="killip-button" data-value="3">Class III - Pulmonary edema.</button>
+            <button class="killip-button" data-value="4">Class IV - Cardiogenic shock.</button>
+          </div>
+        </div>
+        <div class="row">
+  <div class="separator"></div> <!-- Line to separate sections -->
+          <div>Present on Admission</div>
+          <div class="killip-buttons"> <!-- Ensure consistent alignment -->
             <button id="stDeviation" class="toggle-button">ST Deviation</button>
             <button id="positiveCardiacEnzyme" class="toggle-button">Positive Cardiac Enzyme</button>
             <button id="cardiacArrest" class="toggle-button">Cardiac Arrest</button>
-          </td>
-        </tr>
-      </table>
+          </div>
+        </div>
+      </div>
     </div>
+
     <div class="results">
       <p id="inHospitalRisk">In-Hospital All-Cause Mortality Risk Score:</p>
       <p id="inHospitalProbability">In-Hospital All-Cause Mortality Probability:</p>
@@ -557,14 +595,18 @@ function toggleButton(buttonId) {
       <p id="sixMonthProbability">6-Month All-Cause Mortality Probability:</p>
     </div>
     <div class="evidence">
-      <p>Evidence/Interpretation: Additional analysis or context can be placed here.<p>
-Reference: <a href="https://www.outcomes-umassmed.org/grace/grace_risk_table.aspx" target="_blank">GRACE Risk Interquartile Interpretations</a><br>
-Reference: <a href="https://www.outcomes-umassmed.org/grace/files/GRACE_RiskModel_Coefficients.pdf" target="_blank">GRACE Risk Model Coefficients</a><br>
-</p>
+      <p>Evidence/Interpretation: Additional analysis or context can be placed here.<br>
+      Reference: <a href="https://www.outcomes-umassmed.org/grace/grace_risk_table.aspx" target="_blank">GRACE Risk Interquartile Interpretations</a><br>
+      Reference: <a href="https://www.outcomes-umassmed.org/grace/files/GRACE_RiskModel_Coefficients.pdf" target="_blank">GRACE Risk Model Coefficients</a><br>
+      </p>
     </div>
   </div>
-  <footer>
-       Please cite all use of this material as — Copyright 1998-2014, Center for Outcomes Research, University of Massachusetts Medical School.
-  </footer>
+<footer>
+      © 2024 by Gayan S Gunasekara and Gabriel Ingersoll. <br>
+      Licensed under the MIT License.
+    </footer>
+  </div>
+</body>
+</html>
 </body>
 </html>
