@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GRACE ACS 2.0 Risk Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Ensure responsive scaling -->
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background-color: #f7f7f7;
+      color: #333;
+      margin: 0;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 2em; /* Responsive font size */
+      text-align: center;
+      color: #4A90E2; /* Soothing blue for headings */
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 100%;
+      margin: auto;
+    }
+    .card {
+      background-color: #f0f8ff; /* Light blue panel */
+      padding: 20px; /* Increased padding */
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ddd;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table th,
+    .table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    input[type="range"] {
+      height: 20px; /* Increased slider height */
+      background: #ddd;
+      border-radius: 10px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb,
+    input[type="range"]::-moz-range-thumb {
+      width: 30px; /* Larger thumb size */
+      height: 30px;
+      background: #4CAF50;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    input[type="number"] {
+      width: 100%; /* Ensure full width for text inputs */
+      padding: 5px; /* Added padding for readability */
+    }
+    .killip-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .killip-button {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+      background: white;
+      transition: background-color 0.3s;
+    }
+    .killip-button.selected {
+      background-color: #E9F7EF;
+    }
+    .results {
+      background-color: #f3e5ab;
+      padding: 25px; /* Increased padding */
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ddd;
+    }
+    .results p {
+      margin: 10px 0;
+      font-weight: bold;
+      font-size: 1.1em; /* Larger font size for readability */
+    }
+    .evidence {
+      background-color: #d4efdf;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ddd;
+    }
+    .evidence p {
+      font-size: 1em; 
+      color: #333;
+    }
+    footer {
+      text-align: center; /* Centered footer */
+      font-size: 0.9em; /* Smaller font size for the footer */
+    }
+    
+    .toggle-button {
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      background: white;
+      border: 1px solid #ddd;
+    }
+
+    .toggle-button.selected {
+      background-color: #e9f7ef;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px; /* Reduce padding on smaller screens */
+      }
+      h1 {
+        font-size: 1.5em; /* Smaller heading font size on smaller screens */
+      }
+      .table th, 
+      .table td {
+        padding: 8px; /* Smaller padding for smaller screens */
+      }
+    }
+  </style>
+  <script>
+    // Linear interpolation for a given point between two ranges
+    function linearInterpolation(x, x1, y1, x2, y2) {
+      return y1 + ((x - x1) * (y2 - y1) / (x2 - x1));
+    }
+
+    function scoreToProbability(score, mapping) {
+      let previousThreshold = 0;
+      let previousProbability = 0;
+
+      for (const [threshold, probability] of mapping) {
+        if (score < threshold) {
+          if (previousThreshold === 0) {
+            return probability; // If score is less than the first threshold, return the first probability
+          }
+          return linearInterpolation(score, previousThreshold, previousProbability, threshold, probability);
+        }
+        previousThreshold = threshold;
+        previousProbability = probability;
+      }
+
+      return mapping[mapping.length - 1][1]; // Return the max probability if the score exceeds the highest threshold
+    }
+
+    function calculateInHospitalRisk(killip, sbp, hr, age, creatinine, stChange, posInit, carrSt) {
+      // Determine Killip class points
+      let killips = 0;
+      if (killip === 2) {
+        killips = 20;
+      } else if (killip === 3) {
+        killips = 39;
+      } else if (killip === 4) {
+        killips = 59;
+      }
+
+      // Determine Systolic Blood Pressure (SBP) points
+      let sysbp2 = 0;
+      if (sbp < 80) {
+        sysbp2 = 58;
+      } else if (sbp < 100) {
+        sysbp2 = 58 - (sbp - 80) * (10 / 20);
+      } else if (sbp < 110) {
+        sysbp2 = 48 - (sbp - 100) * (5 / 10);
+      } else if (sbp < 120) {
+        sysbp2 = 43 - (sbp - 110) * (4 / 10);
+      } else if (sbp < 130) {
+        sysbp2 = 39 - (sbp - 120) * (5 / 10);
+      } else if (sbp < 140) {
+        sysbp2 = 34 - (sbp - 130) * (5 / 10);
+      } else if (sbp < 150) {
+        sysbp2 = 29 - (sbp - 140) * (5 / 10);
+      } else if (sbp < 160) {
+        sysbp2 = 24 - (sbp - 150) * (5 / 10);
+      } else if (sbp < 180) {
+        sysbp2 = 19 - (sbp - 160) * (9 / 20);
+      } else if (sbp < 200) {
+        sysbp2 = 10 - (sbp - 180) * (10 / 20);
+      } else {
+        sysbp2 = 0;
+      }
+
+      // Determine Heart Rate (HR) points
+      let pulse2 = 0;
+      if (hr < 50) {
+        pulse2 = 0;
+      } else if (hr < 60) {
+        pulse2 = (hr - 50) * (3 / 10);
+      } else if (hr < 70) {
+        pulse2 = 3 + (hr - 60) * (3 / 10);
+      } else if (hr < 80) {
+        pulse2 = 6 + (hr - 70) * (3 / 10);
+      } else if (hr < 90) {
+        pulse2 = 9 + (hr - 80) * (3 / 10);
+      } else if (hr < 100) {
+        pulse2 = 12 + (hr - 90) * (3 / 10);
+      } else if (hr < 110) {
+        pulse2 = 15 + (hr - 100) * (3 / 10);
+      } else if (hr < 150) {
+        pulse2 = 18 + (hr - 110) * (12 / 40);
+      } else if (hr < 200) {
+        pulse2 = 30 + (hr - 150) * (16 / 50);
+      } else {
+        pulse2 = 46;
+      }
+
+      // Determine Age points
+      let age2 = 0;
+      if (age < 30) {
+        age2 = 0;
+      } else if (age < 40) {
+        age2 = (age - 30) * (17 / 10);
+      } else if (age < 50) {
+        age2 = 17 + (age - 40) * (16 / 10);
+      } else if (age < 60) {
+        age2 = 33 + (age - 50) * (17 / 10);
+      } else if (age < 70) {
+        age2 = 50 + (age - 60) * (17 / 10);
+      } else if (age < 80) {
+        age2 = 67 + (age - 70) * (16 / 10);
+      } else if (age < 90) {
+        age2 = 83 + (age - 80) * (17 / 10);
+      } else {
+        age2 = 100;
+      }
+
+      // Determine Creatinine points
+      let crt2 = 0;
+      if (creatinine < 0.2) {
+        crt2 = (creatinine) * (1 / 0.2);
+      } else if (creatinine < 0.4) {
+        crt2 = 1 + (creatinine - 0.2) * (2 / 0.2);
+      } else if (creatinine < 0.6) {
+        crt2 = 3 + (creatinine - 0.4) * (1 / 0.2);
+      } else if (creatinine < 0.8) {
+        crt2 = 4 + (creatinine - 0.6) * (2 / 0.2);
+      } else if (creatinine < 1.0) {
+        crt2 = 6 + (creatinine - 0.8) * (1 / 0.2);
+      } else if (creatinine < 1.2) {
+        crt2 = 7 + (creatinine - 1.0) * (1 / 0.2);
+      } else if (creatinine < 1.4) {
+        crt2 = 8 + (creatinine - 1.2) * 2;
+      } else if (creatinine < 1.6) {
+        crt2 = 10 + (creatinine - 1.4) * (1 / 0.2);
+      } else if (creatinine < 1.8) {
+        crt2 = 11 + (creatinine - 1.6) * 2;
+      } else if (creatinine < 2.0) {
+        crt2 = 13 + (creatinine - 1.8) * (1 / 0.2);
+      } else if (creatinine < 3.0) {
+        crt2 = 14 + (creatinine - 2.0) * (7);
+      } else if (creatinine < 4.0) {
+        crt2 = 21 + (creatinine - 3.0) * 7;
+      } else {
+        crt2 = 28;
+      }
+
+      // Calculate In-Hospital Risk Score
+      const Death_pt = killips + sysbp2 + pulse2 + age2 + crt2 + 28 * stChange + 14 * posInit + 39 * carrSt;
+
+      return Death_pt;
+    }
+
+    function calculateSixMonthRisk(killip, sbp, hr, age, creatinine, stChange, posInit, carrSt) {
+      let killips = 0;
+      if (killip === 2) {
+        killips = 15;
+      } else if (killip === 3) {
+        killips = 29;
+      } else if (killip === 4) {
+        killips = 44;
+      }
+
+      let sysbp2 = 0;
+      if (sbp < 80) {
+        sysbp2 = 40;
+      } else if (sbp < 100) {
+        sysbp2 = 40 - (sbp - 80) * 0.3;
+      } else if (sbp < 110) {
+        sysbp2 = 34 - (sbp - 100) * 0.3;
+      } else if (sbp < 120) {
+        sysbp2 = 31 - (sbp - 110) * (0.4);
+      } else if (sbp < 130) {
+        sysbp2 = 27 - (sbp - 120) * (0.3);
+      } else if (sbp < 140) {
+        sysbp2 = 24 - (sbp - 130) * (0.3);
+      } else if (sbp < 150) {
+        sysbp2 = 20 - (sbp - 140) * (0.4);
+      } else if (sbp < 160) {
+        sysbp2 = 17 - (sbp - 150) * (0.3);
+      } else if (sbp < 180) {
+        sysbp2 = 14 - (sbp - 160) * 0.3;
+      } else if (sbp < 200) {
+        sysbp2 = 8 - (sbp - 180) * 0.4;
+      } else {
+        sysbp2 = 0;
+      }
+
+      let pulse2 = 0;
+      if (hr < 70) {
+        pulse2 = 0;
+      } else if (hr < 80) {
+        pulse2 = (hr - 70) * 0.3;
+      } else if (hr < 90) {
+        pulse2 = 3 + (hr - 80) * (0.2);
+      } else if (hr < 100) {
+        pulse2 = 5 + (hr - 90) * (0.3);
+      } else if (hr < 110) {
+        pulse2 = 8 + (hr - 100) * 0.2;
+      } else if (hr < 150) {
+        pulse2 = 10 + (hr - 110) * (0.3);
+      } else if (hr < 200) {
+        pulse2 = 22 + (hr - 150) * (0.3);
+      } else {
+        pulse2 = 34;
+      }
+
+      let age2 = 0;
+      if (age < 35) {
+        age2 = 0;
+      } else if (age < 45) {
+        age2 = (age - 35) * 1.8;
+      } else if (age < 55) {
+        age2 = 18 + (age - 45) * (1.8);
+      } else if (age < 65) {
+        age2 = 36 + (age - 55) * (1.8);
+      } else if (age < 75) {
+        age2 = 54 + (age - 65) * (1.9);
+      } else if (age < 85) {
+        age2 = 73 + (age - 75) * 1.8;
+      } else if (age < 90) {
+        age2 = 91 + (age - 85) * (1.8);
+      } else {
+        age2 = 100;
+      }
+
+      let crt2 = 0;
+      if (creatinine < 0.2) {
+        crt2 = (creatinine) * (1 / 0.2);
+      } else if (creatinine < 0.4) {
+        crt2 = 1 + (creatinine - 0.2) * (2 / 0.2);
+      } else if (creatinine < 0.6) {
+        crt2 = 3 + (creatinine - 0.4) * (1 / 0.2);
+      } else if (creatinine < 0.8) {
+        crt2 = 4 + (creatinine - 0.6) * (2 / 0.2);
+      } else if (creatinine < 1.0) {
+        crt2 = 6 + (creatinine - 0.8) * (1 / 0.2);
+      } else if (creatinine < 1.2) {
+        crt2 = 7 + (creatinine - 1.0) * (1 / 0.2);
+      } else if (creatinine < 1.4) {
+        crt2 = 8 + (creatinine - 1.2) * 2;
+      } else if (creatinine < 1.6) {
+        crt2 = 10 + (creatinine - 1.4) * (1 / 0.2);
+      } else if (creatinine < 1.8) {
+        crt2 = 11 + (creatinine - 1.6) * 2;
+      } else if (creatinine < 2.0) {
+        crt2 = 13 + (creatinine - 1.8) * (1 / 0.2);
+      } else if (creatinine < 3.0) {
+        crt2 = 14 + (creatinine - 2.0) * (7);
+      } else if (creatinine < 4.0) {
+        crt2 = 21 + (creatinine - 3.0) * 7;
+      } else {
+        crt2 = 28;
+      }
+
+      // Calculate Six-Month Risk Score
+      const sixMonth_pt = killips + sysbp2 + pulse2 + age2 + crt2 + 17 * stChange + 13 * posInit + 30 * carrSt;
+
+      return sixMonth_pt;
+    }
+
+    function calculateRisk() {
+    const age = parseFloat(document.getElementById("age").value);
+      const sbp = parseFloat(document.getElementById("sbp").value);
+      const hr = parseFloat(document.getElementById("hr").value);
+      const creatinine = parseFloat(document.getElementById("creatinine").value);
+
+      const killipButtons = document.querySelectorAll(".killip-button.selected");
+      const killip = killipButtons.length ? parseInt(killipButtons[0].dataset.value) : 1;
+
+      const stDeviation = document.getElementById("stDeviation").classList.contains("selected") ? 1 : 0;
+      const positiveCardiacEnzyme = document.getElementById("positiveCardiacEnzyme").classList.contains("selected") ? 1 : 0;
+      const cardiacArrest = document.getElementById("cardiacArrest").classList.contains("selected") ? 1 : 0;
+
+
+  const inHospitalScore = calculateInHospitalRisk(
+    killip, sbp, hr, age, creatinine, stDeviation, positiveCardiacEnzyme, cardiacArrest
+  );
+  const sixMonthScore = calculateSixMonthRisk(
+    killip, sbp, hr, age, creatinine, stDeviation, positiveCardiacEnzyme, cardiacArrest
+  );
+
+  const inHospitalProbability = scoreToProbability(inHospitalScore, [
+    [58, 0.002], [79, 0.004], [91, 0.006], [100, 0.008], [107, 0.010], 
+    [129, 0.020], [141, 0.030], [151, 0.040], [158, 0.050], [164, 0.060], 
+    [169, 0.070], [173, 0.080], [177, 0.090], [181, 0.100], [184, 0.110], 
+    [187, 0.120], [190, 0.130], [192, 0.140], [195, 0.150], [197, 0.160], 
+    [199, 0.170], [201, 0.180], [203, 0.190], [205, 0.200], [207, 0.210], 
+    [209, 0.220], [211, 0.230], [213, 0.240], [216, 0.260], [220, 0.290], 
+    [235, 0.400], [248, 0.500], [260, 0.600], [274, 0.700], [290, 0.800], 
+    [315, 0.900], [372, 1]
+  ]);
+
+  const sixMonthProbability = scoreToProbability(sixMonthScore, [
+    [6, 0.2], [27, 0.4], [39, 0.6], [48, 0.8], [55, 1.0], 
+    [60, 1.2], [65, 1.4], [69, 1.6], [73, 1.8], [76, 2.0], 
+    [88, 3.0], [97, 4.0], [104, 5.0], [110, 6.0], [115, 7.0], 
+    [119, 8.0], [123, 9.0], [126, 10.0], [129, 11.0], [132, 12.0], 
+    [134, 13.0], [137, 14.0], [139, 15.0], [141, 16.0], [143, 17.0], 
+    [145, 18.0], [147, 19.0], [149, 20.0], [150, 21.0], [152, 22.0], 
+    [153, 23.0], [155, 24.0], [156, 25.0], [158, 26.0], [159, 27.0], 
+    [160, 28.0], [162, 29.0], [163, 30.0], [174, 40.0], [183, 50.0], 
+    [191, 60.0], [200, 70.0], [208, 80.0], [219, 90.0], [285, 99.0]
+  ]);
+
+ 
+     document.getElementById("inHospitalRisk").innerText = `In-Hospital All-Cause Mortality Risk Score: ${inHospitalScore.toFixed(2)}`;
+      document.getElementById("inHospitalProbability").innerText = `In-Hospital All-Cause Mortality Probability: ${(inHospitalProbability * 100).toFixed(2)}%`;
+
+      document.getElementById("sixMonthRisk").innerText = `6-Month All-Cause Mortality Risk Score: ${sixMonthScore.toFixed(2)}`;
+      document.getElementById("sixMonthProbability").innerText = `6-Month All-Cause Mortality Probability: ${(sixMonthProbability).toFixed(2)}%`;
+
+}
+
+function updateSliderValue(inputId, event) {
+  const newValue = event.target.value;
+  document.getElementById(inputId).value = newValue;
+  calculateRisk();
+}
+function toggleButton(buttonId) {
+      const button = document.getElementById(buttonId);
+      button.classList.toggle("selected");
+      calculateRisk();
+    }
+
+    function setSelectedKillip(value) {
+      document.querySelectorAll(".killip-button").forEach(button => {
+        button.classList.remove("selected");
+      });
+
+      const selectedButton = document.querySelector(`.killip-button[data-value="${value}"]`);
+      if (selectedButton) {
+        selectedButton.classList.add("selected");
+      }
+
+      calculateRisk();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const sliders = ["age", "sbp", "hr", "creatinine"];
+      sliders.forEach(slider => {
+        const sliderElement = document.getElementById(slider);
+        const textElement = document.getElementById(slider + "Text");
+        sliderElement.addEventListener("input", event => {
+          textElement.value = event.target.value;
+          calculateRisk();
+        });
+        textElement.addEventListener("change", event => {
+          sliderElement.value = event.target.value;
+          calculateRisk();
+        });
+      });
+
+      document.querySelectorAll(".killip-button").forEach(button => {
+        button.addEventListener("click", event => {
+          setSelectedKillip(event.target.dataset.value);
+          calculateRisk();
+        });
+      });
+
+      ["stDeviation", "positiveCardiacEnzyme", "cardiacArrest"].forEach(buttonId => {
+        document.getElementById(buttonId).addEventListener("click", () => toggleButton(buttonId));
+      });
+
+      calculateRisk();
+    });
+  </script>
+
+</head>
+<body>
+  <h1>GRACE ACS 2.0 Risk Calculator</h1>
+  <div class="container">
+    <div class="card">
+      <table class="table">
+        <tr>
+          <th>Parameter</th>
+          <th>Slider</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Age (in years)</td>
+          <td><input type="range" id="age" min="1" max="120" value="30" /></td>
+          <td><input type="number" id="ageText" min="1" max="120" value="30" step="1" /></td>
+        </tr>
+        <tr>
+          <td>Systolic Blood Pressure (mmHg)</td>
+          <td><input type="range" id="sbp" min="50" max="250" value="120" /></td>
+          <td><input type="number" id="sbpText" min="50" max="250" value="120" step="1" /></td>
+        </tr>
+        <tr>
+          <td>Heart Rate (bpm)</td>
+          <td><input type="range" id="hr" min="30" max="200" value="70" /></td>
+          <td><input type="number" id="hrText" min="30" max="200" value="70" /></td>
+        </tr>
+        <tr>
+          <td>Creatinine (mg/dL)</td>
+          <td><input type="range" id="creatinine" min="0.1" max="5" step="0.1" value="1.0" /></td>
+          <td><input type="number" id="creatinineText" min="0.1" max="5" value="1.0" step="0.1" /></td>
+        </tr>
+      </table>
+    </div>
+    <div class="card">
+      <table class="table">
+        <tr>
+          <th>Killip Class</th>
+          <td>
+            <div class="killip-buttons">
+              <button class="killip-button selected" data-value="1">
+                <span class="killip">I</span> - No signs of heart failure.
+              </button>
+              <button class="killip-button" data-value="2">
+                <span class="killip">II</span> - Mild heart failure (rales, S3 gallop, jugular venous distension).
+              </button>
+              <button class="killip-button" data-value="3">
+                <span class="killip">III</span> - Pulmonary edema.
+              </button>
+              <button class="killip-button" data-value="4">
+                <span class="killip">IV</span> - Cardiogenic shock.
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th>Present on Admission</th>
+          <td>
+            <button id="stDeviation" class="toggle-button">ST Deviation</button>
+            <button id="positiveCardiacEnzyme" class="toggle-button">Positive Cardiac Enzyme</button>
+            <button id="cardiacArrest" class="toggle-button">Cardiac Arrest</button>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="results">
+      <p id="inHospitalRisk">In-Hospital All-Cause Mortality Risk Score:</p>
+      <p id="inHospitalProbability">In-Hospital All-Cause Mortality Probability:</p>
+      <p id="sixMonthRisk">6-Month All-Cause Mortality Risk Score:</p>
+      <p id="sixMonthProbability">6-Month All-Cause Mortality Probability:</p>
+    </div>
+    <div class="evidence">
+      <p>Evidence/Interpretation: Additional analysis or context can be placed here.<p>
+Reference: <a href="https://www.outcomes-umassmed.org/grace/grace_risk_table.aspx" target="_blank">GRACE Risk Interquartile Interpretations</a><br>
+Reference: <a href="https://www.outcomes-umassmed.org/grace/files/GRACE_RiskModel_Coefficients.pdf" target="_blank">GRACE Risk Model Coefficients</a><br>
+</p>
+    </div>
+  </div>
+  <footer>
+       Please cite all use of this material as — Copyright 1998-2014, Center for Outcomes Research, University of Massachusetts Medical School.
+  </footer>
+</body>
+</html>
+
+
+
+
