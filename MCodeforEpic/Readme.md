@@ -6,6 +6,8 @@ M Code Instructions
 
 4) In Classic, Go to Doc Flowsheet Builder, Create Group/Row, 8 Rows will be created which are the variables. 4 are for the scores and interpertation.
    Create Trigger Row first which should be the last qualitative question (have to answer all the questions to get the score)
+
+   
    8 - Killip Class Row Type 1 Value Type 8 Context 1
        Display - Show Values on Button Using -2 Value Only, Check Display all list choices in nvagiator
        Custom List - Check Size button width to each choice
@@ -14,7 +16,9 @@ M Code Instructions
    
    1 - Age Row type 3 Value Type 1 Context over-time
        Custom Formula: M:{Trigger Row},x=$$zCalcAge^%Zefnlii(+$h,$$getn^elibEAnLIB(""EPT"",patID,1,""100;1""))
+   
    2 - SBP Row type 3 Value Type 1 Context over-time
        Custom Formula: M:{Trigger Row},x=$$getLastFloVal^JULIB7(inpID,"""",instant,5)
+   
    3- Heart Rate type 3 Value Type 1 Context over-time
        M:{trigger row},x=$$getLastFloVal^JULIB7(inpID,"""",instant,8)
