@@ -3,10 +3,10 @@ age=+$$zCalcAge^%Zefnlii(+$h,$$getn^elibEAnLIB(""EPT"",patID,1,""100;1""))
 hr=+$$getLastFloVal^JULIB7(inpID,"""",instant,8)
 cr=+$$evalRule^elibHULIB22(755911,patID,patDAT)
 sbp=+$$getLastFloVal^JULIB7(inpID,"""",instant,5)
-st={99032510;;-1}
-trop={99032511;;-1}
-kp={99032512;;0}
-ca={99032509;;-1}
+st={15599;;-1}
+trop={15600;;-1}
+kp={15594;;0}
+ca={15598;;-1}
 xb=(-7.7035+(0.0531*age)+(0.0087*hr)-(0.0168*sbp)+(0.1823*cr)+(0.6931* kp)+(1.4586*ca)+(0.4700*trop)+(0.8755*st))
 check=+$s(age>0:0,1:2)+$s(hr>0:0,1:2)+$s(sbp>0:0,1:2)+$s(cr>0:0,1:2)+$s(st>=0:0,1:2)+$s(trop>=0:0,1:2)+$s(kp>0:0,1:2)+$s(ca>=0:0,1:2)
 x=+$s(check=0:(((2.71828**xb)/(1+(2.71828**xb)))*100),1:"error")
