@@ -1,0 +1,29 @@
+GRACE In-Hospital Risk Score (%)  
+-Row Type 3 
+-Value Type 3 
+-Context 1 
+
+-Display Name: GRACE In-Hospital Risk Score (%)  
+-Preferred Group: GRACE Group 
+Custom Formula 
+
+M:x 
+score={15601} 
+percent={15602} 
+x=score_" ("_percent_"%) " 
+
+GRACE 6-month Risk Score (%) 
+-Row Type 3 
+-Value Type 3 \ String 
+-Context 1 
+
+-Display Name: GRACE 6 Month Risk Score (%)  
+-Preferred Group: GRACE Group\FLT ID 
+
+Custom Formula 
+M:x 
+score={15602} 
+percent={15603} 
+x=score_" ("_percent_"%)" 
+
+// _ before and after an integer class variable switches to string class
